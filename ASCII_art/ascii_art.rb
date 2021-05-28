@@ -2,8 +2,8 @@
 print "Enter a number: "
 number = gets.chomp.to_i # assume that it will be int
 
-current_line = 0 # starting with line 1 for ease
+current_line = 0 
 until current_line == number do
     current_line += 1
-    puts "*" * current_line
+    puts "#{" " * (number - current_line)}#{"*" * current_line}"
 end
