@@ -1,0 +1,116 @@
+class Product
+    attr_accessor :parts
+
+    def initialize(parts)
+        @parts = parts.chars
+    end
+
+    def parts_needed
+        @parts.uniq
+    end
+
+end
+
+class Shelf
+    attr_accessor :parts
+
+    def initialize(parts)
+        @parts = parts
+    end
+
+    def how_many_units(magazine)
+        magazine.check_magazine(self.parts)
+    end
+
+end
+
+class Stool < Product
+
+    def how_many_units(magazine)
+        part_b = magazine.check_magazine(self.parts_needed[0])
+         if magazine.check_magazine(self.parts_needed[1]) < 3 
+             part_c = 0 
+         else 
+            part_c = magazine.check_magazine(self.parts_needed[1])/3
+         end
+        if part_b >= part_c
+            part_c
+        else
+            part_b
+        end
+    end
+
+end
+
+class Table < Product
+
+    # write the function to calculate how many full sets are in the magazine
+    def how_many_units(magazine)
+        part_d = magazine.check_magazine(self.parts_needed[0])
+         if magazine.check_magazine(self.parts_needed[1]) < 4 
+             part_e = 0 
+         else 
+            part_e = magazine.check_magazine(self.parts_needed[1])/4
+         end
+        if part_d >= part_e
+            part_e
+        else
+            part_d
+        end
+    end
+
+end
+
+class Magazine
+
+    attr_accessor :parts
+
+    def initialize(parts)
+        @parts = Hash.new(0)
+        parts.chars.each do |part_ID| 
+            if @parts[part_ID] 
+                @parts[part_ID] += 1
+            else
+                @parts[part_ID] = 1
+            end
+        end
+        @parts
+    end
+
+    def check_magazine(part_ID)
+        @parts[part_ID]
+    end
+
+end
+
+class Inventory
+
+    attr_accessor :stock, :magazine
+
+    def initialize(magazine)
+        @stock = {}
+        @magazine = magazine
+    end
+
+    def current_stock(shelf, stool, table)
+        @stock["Shelf"] = shelf.how_many_units(@magazine)
+        @stock["Stool"] = stool.how_many_units(@magazine)
+        @stock["Table"] = table.how_many_units(@magazine)
+        @stock
+    end
+
+end
+
+
+magazine_1 = Magazine.new("zcabc")
+inventory_check_1 = Inventory.new(magazine_1)
+
+magazine_2 = Magazine.new("eebeedebaceeceedeceacee")
+inventory_check_2 = Inventory.new(magazine_2)
+
+stool = Stool.new("bccc")
+shelf = Shelf.new("a")
+table = Table.new("deeee")
+
+p inventory_check_1.current_stock(shelf, stool, table)
+p inventory_check_2.current_stock(shelf, stool, table)
