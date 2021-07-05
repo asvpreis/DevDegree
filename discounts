@@ -1,0 +1,64 @@
+class Product
+
+    attr_accessor :name, :quantity
+
+    def initialize(name, quantity)
+        @name = name
+        @quantity = quantity
+    end
+
+    PRODUCT_PRICES = {
+        'grapes' => 5,
+        'apples' => 3,
+        'peaches' => 7
+    }
+
+    def price
+        (PRODUCT_PRICES[name] * quantity) - discount
+    end
+
+    def discount
+        case name
+        when 'grapes'
+            (quantity.to_f / 2).floor * PRODUCT_PRICES['grapes']
+        when 'apples'
+            quantity >= 2 ? (PRODUCT_PRICES['apples'] * quantity * 0.2) : 0
+        else 
+            0    
+        end
+    end
+
+end
+
+class Checkout
+
+    attr_accessor :input
+
+    def self.instantiate_product(array)
+        Product.new(array[0], array[1])
+    end
+
+    def self.calculate_price(input)
+        price = 0
+        products = input.map do |product|
+            instantiate_product(product)
+        end
+        p "products: ", products
+        products.each do |product|
+            p "product price: ", product, ": ", product.price
+            price += product.price
+        end
+        price
+    end
+
+end
+
+input = [['grapes', 2], ['apples', 0], ['peaches', 1]] #17
+input2 = [['grapes', 1], ['apples', 1], ['peaches', 1]] #15
+input3 = [['grapes', 2]] #10
+input4 = [['grapes', 3], ['apples', 5], ['peaches', 2]] #36
+
+p Checkout.calculate_price(input)
+p Checkout.calculate_price(input2)
+p Checkout.calculate_price(input3)
+p Checkout.calculate_price(input4)
