@@ -1,0 +1,193 @@
+# FROM THIS:
+
+class GildedRose
+
+  def initialize(items)
+    @items = items
+  end
+
+  def update_quality()
+    @items.each do |item|
+      if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert"
+        if item.quality > 0
+          if item.name != "Sulfuras, Hand of Ragnaros"
+            item.quality = item.quality - 1
+          end
+        end
+      else
+        if item.quality < 50
+          item.quality = item.quality + 1
+          if item.name == "Backstage passes to a TAFKAL80ETC concert"
+            if item.sell_in < 11
+              if item.quality < 50
+                item.quality = item.quality + 1
+              end
+            end
+            if item.sell_in < 6
+              if item.quality < 50
+                item.quality = item.quality + 1
+              end
+            end
+          end
+        end
+      end
+      if item.name != "Sulfuras, Hand of Ragnaros"
+        item.sell_in = item.sell_in - 1
+      end
+      if item.sell_in < 0
+        if item.name != "Aged Brie"
+          if item.name != "Backstage passes to a TAFKAL80ETC concert"
+            if item.quality > 0
+              if item.name != "Sulfuras, Hand of Ragnaros"
+                item.quality = item.quality - 1
+              end
+            end
+          else
+            item.quality = item.quality - item.quality
+          end
+        else
+          if item.quality < 50
+            item.quality = item.quality + 1
+          end
+        end
+      end
+    end
+  end
+end
+
+class Item
+  attr_accessor :name, :sell_in, :quality
+
+  def initialize(name, sell_in, quality)
+    @name = name
+    @sell_in = sell_in
+    @quality = quality
+  end
+
+  def to_s()
+    "#{@name}, #{@sell_in}, #{@quality}"
+  end
+end
+
+#TO THIS:
+
+require 'delegate'
+
+class GildedRose
+  attr_accessor :items
+
+  def initialize(items)
+    @items = items
+  end
+
+  def update_quality
+    items.each do |item|
+      ItemWrapper.wrap(item).update
+    end
+  end
+
+end
+
+class ItemWrapper < SimpleDelegator
+  MAX_QUALITY = 50
+  MIN_QUALITY = 0
+  AGED_CHEESE = ["Aged Brie"]
+  CONJURED = ["Conjured Mana Cake"]
+  BACKSTAGE_PASS = ["Backstage passes to a TAFKAL80ETC concert"]
+  SULFURAS = ["Sulfuras, Hand of Ragnaros"]
+
+  def self.wrap(item)
+    case
+    when AGED_CHEESE.include?(item.name) then AgedBrie.new(item)
+    when BACKSTAGE_PASS.include?(item.name) then BackstagePass.new(item)
+    when CONJURED.include?(item.name) then ConjuredItem.new(item)
+    when SULFURAS.include?(item.name) then SulfurasItem.new(item)
+    else
+      new(item)
+    end
+  end
+
+  def update
+    return if SULFURAS.include?(name)
+
+    update_age
+    update_quality
+  end
+
+  private
+
+  def update_age
+    self.sell_in -= 1
+  end
+
+  def update_quality
+    self.quality += quality_adjustment
+  end
+
+  def quality_adjustment
+    adjustment = 0
+
+    if sell_in < 0
+      adjustment -= 2
+    else
+      adjustment -= 1
+    end
+
+    adjustment
+  end
+
+  def quality=(new_quality)
+    new_quality = MIN_QUALITY if new_quality < MIN_QUALITY
+    new_quality = MAX_QUALITY if new_quality > MAX_QUALITY
+    super(new_quality)
+  end
+end
+
+class AgedBrie < ItemWrapper
+  def quality_adjustment
+    adjustment = 1
+    if sell_in < 0
+      adjustment += 1
+    end
+
+    adjustment
+  end
+end
+
+class BackstagePass < ItemWrapper
+  def quality_adjustment
+    if sell_in < 0
+      -quality
+    elsif sell_in < 6
+      3
+    elsif sell_in < 11
+      2
+    else
+      1
+    end
+  end
+end
+
+class ConjuredItem < ItemWrapper
+  def quality_adjustment
+    sell_in < 0 ? -4 : -2
+  end
+end
+
+class SulfurasItem < ItemWrapper
+  def quality_adjustment; end
+end
+
+class Item
+  attr_accessor :name, :sell_in, :quality
+
+  def initialize(name, sell_in, quality)
+    @name = name
+    @sell_in = sell_in
+    @quality = quality
+  end
+
+  def to_s()
+    "#{@name}, #{@sell_in}, #{@quality}"
+  end
+end
